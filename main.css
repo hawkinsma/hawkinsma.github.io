@@ -21,3 +21,19 @@ nav{
     color: #2a2929;
     text-decoration: none;
 }
+.headshot{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.headshot img{
+    width: 75%;
+    height: auto;
+}
+.header-intro{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+}
+
