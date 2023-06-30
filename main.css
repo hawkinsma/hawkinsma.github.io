@@ -1,0 +1,23 @@
+/**Navbar**/
+body, html{
+    font-family: nobel, sans-serif;
+	font-style: normal;
+}
+
+nav{
+    display: flex;
+    padding: 10px;
+    justify-content: flex-end;
+    align-items: center;
+}
+.nav-item{
+    font-family: nobel, sans-serif;
+	font-style: normal;
+    font-size: 20px;
+    margin: 10px;
+    text-align: center;
+    display: inline-block;
+    position: relative;
+    color: #2a2929;
+    text-decoration: none;
+}
