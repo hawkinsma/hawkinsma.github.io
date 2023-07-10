@@ -27,8 +27,9 @@ nav{
     justify-content: center;
 }
 .headshot img{
-    width: 75%;
+    width: 500px;
     height: auto;
+    border-radius: 40px;
 }
 .header-intro{
     display: flex;
