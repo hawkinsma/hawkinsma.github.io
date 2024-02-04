@@ -10,6 +10,7 @@ nav{
     justify-content: flex-end;
     align-items: center;
 }
+
 .nav-item{
     font-family: nobel, sans-serif;
 	font-style: normal;
@@ -19,22 +20,42 @@ nav{
     display: inline-block;
     position: relative;
     color: #2a2929;
-    text-decoration: none;
+    text-decoration: none;    
 }
+
+.nav-item:after{
+    content: '';
+    position: absolute;
+    width: 100%;
+    transform: scaleX(0);
+    height: 3px;
+    bottom: 0;
+    left: 0;
+    background-color: #547c9b;
+    transform-origin: bottom left;
+    transition: transform .45s ease;
+}
+
+.nav-item:hover:after{
+    transform: scaleX(1);
+    transform-origin: bottom left;
+}
+
 .headshot{
     display: flex;
     align-items: center;
     justify-content: center;
 }
+
 .headshot img{
     width: 300px;
     height: auto;
-    border-radius: 10%;
+    border-radius: 40px;
 }
+
 .header-intro{
     display: flex;
     align-items: center;
     justify-content: center;
     
 }
-
