@@ -35,4 +35,11 @@ body {
     width: 100vw;
     height: 100vh;
     display: block;
+    cursor: grab;
+    /* Dragging orbits the logo, so don't let touch scroll or zoom the page */
+    touch-action: none;
+}
+
+#ascii-bg.dragging {
+    cursor: grabbing;
 }

@@ -42,15 +42,25 @@
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const colorScheme = window.matchMedia('(prefers-color-scheme: light)');
 
-    let W = 0, H = 0, dpr = 1;
+    let W = 0, H = 0, dpr = 1, fontSize = 10;
     let cellW = 0, cellH = 0, cols = 0, rows = 0;
     let centerX = 0, centerY = 0, scale = 0, bound = 1;
     let zbuf, levelBuf, waveBuf, haloBuf, fadeRadius = 0;
     let px, py, pz, nx, ny, nz, count = 0;
     let bg = '#000', levelColors = [], waveColors = [];
+    // Sprite sheet with one pre-rendered tile per (character, color): logo levels,
+    // then wave levels. Copying tiles avoids per-frame text rendering, which makes
+    // Safari's text caches grow until iOS kills the page.
+    const atlas = document.createElement('canvas');
+    const atlasCtx = atlas.getContext('2d');
+    let tileW = 1, tileH = 1;
 
-    // Pointer parallax, eased toward its target each frame
-    const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
+    // Orientation: yaw spins about the vertical axis, pitch tips toward the viewer.
+    // It turns on its own, and the viewer can drag to orbit it like a CAD viewport.
+    const view = { yaw: 0, pitch: 0, vYaw: 0, vPitch: 0, dragging: false, lastInput: -Infinity };
+    const AUTO_SPIN = 0.4;        // rad/s at full speed
+    const DRAG_SPEED = 0.01;      // rad per pixel dragged
+    const RESUME_AFTER = 1200;    // ms after letting go before the auto spin returns
 
     // Screen basis for the logo view: toward the viewer along (1, 1, 1),
     // rotated in-plane so the triangle sits flat with its apex up
@@ -230,10 +240,8 @@
         canvas.width = Math.floor(W * dpr);
         canvas.height = Math.floor(H * dpr);
 
-        const fontSize = W < 700 ? 8 : 10;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        fontSize = W < 700 ? 8 : 10;
         ctx.font = `${fontSize}px "JetBrains Mono", ui-monospace, Menlo, monospace`;
-        ctx.textBaseline = 'top';
         cellW = ctx.measureText('M').width;
         cellH = Math.round(fontSize * 1.2);
         cols = Math.ceil(W / cellW);
@@ -253,6 +261,7 @@
         buildGeometry(0.05);
         scale = radiusPx / bound;
         buildGeometry(cellW / scale / 2);
+        buildAtlas();
     }
 
     // Lights the three face directions in distinct light / mid / dark tones
@@ -264,14 +273,7 @@
 
     function render(time) {
         const t = time / 1000;
-        pointer.x += (pointer.tx - pointer.x) * 0.05;
-        pointer.y += (pointer.ty - pointer.y) * 0.05;
-
-        // Turntable spin about the vertical axis, easing through the two angles
-        // (front and back) where the loose ends line up into the impossible triangle
-        const spin = t * 0.4;
-        const ry = spin - 0.45 * Math.sin(2 * spin) + pointer.x * 0.5;
-        const rx = pointer.y * 0.35;
+        const ry = view.yaw, rx = view.pitch;
 
         // R = Rx * Ry
         const cx = Math.cos(rx), sx = Math.sin(rx);
@@ -348,40 +350,72 @@
         }
 
         ctx.fillStyle = bg;
-        ctx.fillRect(0, 0, W, H);
-        drawLayer(waveBuf, WAVE_RAMP, waveColors);
-        drawLayer(levelBuf, RAMP, levelColors);
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        drawLayer(waveBuf, LEVELS);
+        drawLayer(levelBuf, 0);
     }
 
-    // Draws cells holding levels 1..ramp.length with that level's character and color.
-    // One fillText per (row, level) with spaces as gaps keeps draw calls low.
-    function drawLayer(buf, ramp, colors) {
-        const line = new Array(cols);
-        for (let lvl = 1; lvl <= ramp.length; lvl++) {
-            const ch = ramp[lvl - 1];
-            ctx.fillStyle = colors[lvl - 1];
-            for (let r = 0; r < rows; r++) {
-                const base = r * cols;
-                let first = -1, last = -1;
-                for (let c = 0; c < cols; c++) {
-                    if (buf[base + c] === lvl) {
-                        if (first < 0) first = c;
-                        last = c;
-                        line[c] = ch;
-                    } else {
-                        line[c] = ' ';
-                    }
-                }
-                if (first >= 0) {
-                    ctx.fillText(line.slice(first, last + 1).join(''), first * cellW, r * cellH);
-                }
+    function buildAtlas() {
+        const glyphs = [...RAMP].map((ch, i) => [ch, levelColors[i]])
+            .concat([...WAVE_RAMP].map((ch, i) => [ch, waveColors[i]]));
+        tileW = Math.ceil(cellW * dpr);
+        tileH = Math.ceil(cellH * dpr);
+        atlas.width = tileW * glyphs.length;
+        atlas.height = tileH;
+        atlasCtx.font = `${fontSize * dpr}px "JetBrains Mono", ui-monospace, Menlo, monospace`;
+        atlasCtx.textBaseline = 'top';
+        glyphs.forEach(([ch, color], i) => {
+            atlasCtx.fillStyle = color;
+            atlasCtx.fillText(ch, i * tileW, 0);
+        });
+    }
+
+    // Copies the tile for each occupied cell (levels 1..n, tiles from firstTile on),
+    // in device pixels so tiles land 1:1 and stay crisp
+    function drawLayer(buf, firstTile) {
+        for (let r = 0; r < rows; r++) {
+            const y = Math.round(r * cellH * dpr);
+            const base = r * cols;
+            for (let c = 0; c < cols; c++) {
+                const lvl = buf[base + c];
+                if (!lvl) continue;
+                ctx.drawImage(atlas, (firstTile + lvl - 1) * tileW, 0, tileW, tileH,
+                    Math.round(c * cellW * dpr), y, tileW, tileH);
             }
         }
     }
 
-    let rafId = 0;
+    const wrapAngle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+
+    // Advance the orientation by dt seconds: momentum from a drag, then once the
+    // viewer lets go for a moment, the turntable spin fades back in
+    function updateView(dt, now) {
+        if (view.dragging) return;
+        view.yaw += view.vYaw * dt;
+        view.pitch += view.vPitch * dt;
+        const decay = Math.exp(-dt * 4);
+        view.vYaw *= decay;
+        view.vPitch *= decay;
+
+        const idle = now - view.lastInput - RESUME_AFTER;
+        if (idle <= 0) return;
+        const blend = Math.min(1, idle / 1000);
+        // Eases through the two angles (front and back) where the loose ends line
+        // up into the impossible triangle
+        view.yaw += AUTO_SPIN * (1 - 0.9 * Math.cos(2 * view.yaw)) * blend * dt;
+        // Settle back level so the illusion can line up again
+        view.pitch = wrapAngle(view.pitch) * (1 - (1 - Math.exp(-dt * 1.5)) * blend);
+    }
+
+    // Phones render at 30 fps to keep CPU and battery use down
+    let rafId = 0, lastFrame = -Infinity;
     function loop(time) {
-        render(time);
+        const interval = W < 700 ? 1000 / 30 - 2 : 0;
+        if (time - lastFrame >= interval) {
+            updateView(Math.min(0.1, (time - lastFrame) / 1000), time);
+            lastFrame = time;
+            render(time);
+        }
         rafId = requestAnimationFrame(loop);
     }
 
@@ -394,15 +428,51 @@
         }
     }
 
-    window.addEventListener('pointermove', (e) => {
-        pointer.tx = e.clientX / W - 0.5;
-        pointer.ty = e.clientY / H - 0.5;
+    // Drag (mouse or finger) to orbit
+    let dragX = 0, dragY = 0, dragTime = 0;
+    canvas.addEventListener('pointerdown', (e) => {
+        view.dragging = true;
+        view.vYaw = view.vPitch = 0;
+        dragX = e.clientX;
+        dragY = e.clientY;
+        dragTime = performance.now();
+        canvas.setPointerCapture(e.pointerId);
+        canvas.classList.add('dragging');
     });
+    canvas.addEventListener('pointermove', (e) => {
+        if (!view.dragging) return;
+        const now = performance.now();
+        const dYaw = (e.clientX - dragX) * DRAG_SPEED;
+        const dPitch = -(e.clientY - dragY) * DRAG_SPEED;
+        view.yaw += dYaw;
+        view.pitch += dPitch;
+        // Smoothed angular velocity, carried as momentum on release
+        const dt = Math.max(0.001, (now - dragTime) / 1000);
+        view.vYaw = view.vYaw * 0.5 + (dYaw / dt) * 0.5;
+        view.vPitch = view.vPitch * 0.5 + (dPitch / dt) * 0.5;
+        dragX = e.clientX;
+        dragY = e.clientY;
+        dragTime = now;
+        view.lastInput = now;
+        if (reduceMotion.matches) render(0);
+    });
+    const endDrag = () => {
+        if (!view.dragging) return;
+        view.dragging = false;
+        view.lastInput = performance.now();
+        // A pause before letting go means no fling
+        if (performance.now() - dragTime > 80 || reduceMotion.matches) view.vYaw = view.vPitch = 0;
+        canvas.classList.remove('dragging');
+    };
+    canvas.addEventListener('pointerup', endDrag);
+    canvas.addEventListener('pointercancel', endDrag);
 
     let resizeTimer = 0;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
+            // iOS fires resize as the toolbar slides; only rebuild when the size changed
+            if (window.innerWidth === W && window.innerHeight === H) return;
             resize();
             if (reduceMotion.matches) render(0);
         }, 100);
@@ -410,6 +480,7 @@
 
     colorScheme.addEventListener('change', () => {
         readColors();
+        buildAtlas();
         if (reduceMotion.matches) render(0);
     });
     reduceMotion.addEventListener('change', start);
