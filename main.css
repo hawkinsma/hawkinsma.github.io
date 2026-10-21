@@ -1,61 +1,38 @@
-/**Navbar**/
-body, html{
-    font-family: nobel, sans-serif;
-	font-style: normal;
+:root {
+    --bg: #0b0c0e;
+    /* Logo shading runs from --ascii-dim (darkest facet) to --ascii-bright (lit facet) */
+    --ascii-dim: #1f2a2a;
+    --ascii-bright: #9ff0cc;
+    /* Background wave field, kept well below the logo's range so the logo stands out */
+    --wave-dim: #1a2223;
+    --wave-bright: #3a514d;
 }
 
-nav{
-    display: flex;
-    padding: 10px;
-    justify-content: flex-end;
-    align-items: center;
+@media (prefers-color-scheme: light) {
+    :root {
+        --bg: #f4f2ec;
+        --ascii-dim: #d9d6cc;
+        --ascii-bright: #1d5c45;
+        --wave-dim: #e6e3da;
+        --wave-bright: #c4c0b2;
+    }
 }
 
-.nav-item{
-    font-family: nobel, sans-serif;
-	font-style: normal;
-    font-size: 20px;
-    margin: 10px;
-    text-align: center;
-    display: inline-block;
-    position: relative;
-    color: #2a2929;
-    text-decoration: none;    
+html,
+body {
+    margin: 0;
+    height: 100%;
 }
 
-.nav-item:after{
-    content: '';
-    position: absolute;
-    width: 100%;
-    transform: scaleX(0);
-    height: 3px;
-    bottom: 0;
-    left: 0;
-    background-color: #547c9b;
-    transform-origin: bottom left;
-    transition: transform .45s ease;
+body {
+    background: var(--bg);
+    overflow: hidden;
 }
 
-.nav-item:hover:after{
-    transform: scaleX(1);
-    transform-origin: bottom left;
-}
-
-.headshot{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.headshot img{
-    width: 300px;
-    height: auto;
-    border-radius: 40px;
-}
-
-.header-intro{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    
+#ascii-bg {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    display: block;
 }
