@@ -331,8 +331,9 @@
         }
 
         // Background waves: drifting interference plus ripples rolling out from the
-        // logo, all slowly breathing, and faded toward the middle behind the logo
-        const breath = 0.75 + 0.25 * Math.sin(t * 0.6);
+        // logo, all breathing in and out about every 6 seconds, and faded toward the
+        // middle behind the logo
+        const breath = 0.5 + 0.55 * (0.5 - 0.5 * Math.cos(t * 1.05));
         const waveLevels = WAVE_RAMP.length;
         const cxPx = centerX * cellW, cyPx = centerY * cellH;
         for (let r = 0; r < rows; r++) {

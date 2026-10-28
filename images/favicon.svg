@@ -1,4 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -66.985 1000 1000">
-<style>path{fill:#161826}@media (prefers-color-scheme:dark){path{fill:#e9e9ed}}</style>
-<path fill-rule="evenodd" d="M284.15 742.98 L1000.00 742.98 L571.04 0.00 L529.14 72.56 L874.32 670.42 L326.05 670.42Z M428.96 246.08 L71.04 866.03 L928.96 866.03 L887.07 793.46 L196.72 793.46 L470.86 318.65Z M786.89 619.94 L428.96 0.00 L0.00 742.98 L83.79 742.98 L428.96 145.13 L703.10 619.94Z M500.00 369.13 L644.81 619.94 L355.19 619.94Z M418.03 583.66 L581.97 583.66 L500.00 441.69Z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<!-- Light logo on a dark tile, so it reads on light and dark browser tabs alike -->
+<rect width="100" height="100" rx="22" fill="#0b0c0e"/>
+<path fill="#e9e9ed" fill-rule="evenodd" transform="translate(14 18.8) scale(0.072)" d="M284.15 742.98 L1000.00 742.98 L571.04 0.00 L529.14 72.56 L874.32 670.42 L326.05 670.42Z M428.96 246.08 L71.04 866.03 L928.96 866.03 L887.07 793.46 L196.72 793.46 L470.86 318.65Z M786.89 619.94 L428.96 0.00 L0.00 742.98 L83.79 742.98 L428.96 145.13 L703.10 619.94Z M500.00 369.13 L644.81 619.94 L355.19 619.94Z M418.03 583.66 L581.97 583.66 L500.00 441.69Z"/>
 </svg>
