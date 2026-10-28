@@ -1,8 +1,11 @@
 :root {
     --bg: #0b0c0e;
-    /* Logo shading runs from --ascii-dim (darkest facet) to --ascii-bright (lit facet) */
+    /* Logo colors from the sparsest characters (--ascii-dim) to the densest (--ascii-bright) */
     --ascii-dim: #1f2a2a;
     --ascii-bright: #9ff0cc;
+    /* 0: lit faces get the densest characters, which glow on a dark background.
+       1: shadowed faces do instead, like ink on paper. */
+    --ascii-ink: 0;
     /* Background wave field, kept well below the logo's range so the logo stands out */
     --wave-dim: #1a2223;
     --wave-bright: #3a514d;
@@ -10,11 +13,12 @@
 
 @media (prefers-color-scheme: light) {
     :root {
-        --bg: #f4f2ec;
-        --ascii-dim: #d9d6cc;
-        --ascii-bright: #1d5c45;
-        --wave-dim: #e6e3da;
-        --wave-bright: #c4c0b2;
+        --bg: #f3f1ea;
+        --ascii-dim: #7fa898;
+        --ascii-bright: #0b2f24;
+        --ascii-ink: 1;
+        --wave-dim: #ebe8e0;
+        --wave-bright: #d6d1c4;
     }
 }
 

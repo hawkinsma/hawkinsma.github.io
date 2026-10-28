@@ -47,7 +47,7 @@
     let centerX = 0, centerY = 0, scale = 0, bound = 1;
     let zbuf, levelBuf, waveBuf, haloBuf, fadeRadius = 0;
     let px, py, pz, nx, ny, nz, count = 0;
-    let bg = '#000', levelColors = [], waveColors = [];
+    let bg = '#000', levelColors = [], waveColors = [], ink = false;
     // Sprite sheet with one pre-rendered tile per (character, color): logo levels,
     // then wave levels. Copying tiles avoids per-frame text rendering, which makes
     // Safari's text caches grow until iOS kills the page.
@@ -231,6 +231,7 @@
         bg = style.getPropertyValue('--bg').trim();
         levelColors = colorRamp(style, '--ascii-dim', '--ascii-bright', LEVELS);
         waveColors = colorRamp(style, '--wave-dim', '--wave-bright', WAVE_RAMP.length);
+        ink = style.getPropertyValue('--ascii-ink').trim() === '1';
     }
 
     function resize() {
@@ -312,7 +313,9 @@
             const diffuse = Math.max(0, nrx * lx + nry * ly + nrz * lz);
             const spec = Math.pow(Math.max(0, nrx * hx + nry * hy + nrz * hz), 24);
 
-            const lum = Math.min(1, 0.2 + diffuse * 0.6 + spec * 0.25);
+            let lum = Math.min(1, 0.2 + diffuse * 0.6 + spec * 0.25);
+            // On a light background, shade like ink: shadowed faces darkest and densest
+            if (ink) lum = 1.2 - lum;
             levelBuf[idx] = 1 + Math.min(LEVELS - 1, (lum * LEVELS) | 0);
         }
 
